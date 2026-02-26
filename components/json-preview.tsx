@@ -1,23 +1,11 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
-import dynamic from "next/dynamic";
+import { useMemo, useState, useCallback, useEffect } from "react";
+import { codeToHtml } from "shiki";
 import { Button } from "@/components/ui/button";
 import { TooltipWrapper } from "@/components/ui/tooltip";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Copy01Icon, Download01Icon } from "@hugeicons/core-free-icons";
-
-const SyntaxHighlighter = dynamic(
-  () =>
-    import("react-syntax-highlighter").then((mod) => {
-      const { Prism } = mod;
-      const { oneDark } = require("react-syntax-highlighter/dist/cjs/styles/prism");
-      return function Highlight({ children, ...props }: { children: string; [key: string]: unknown }) {
-        return <Prism style={oneDark} {...props}>{children}</Prism>;
-      };
-    }),
-  { ssr: false }
-);
 import type { FlowNodeType, FlowEdgeType } from "@/lib/flow-types";
 import { flowToSchema } from "@/lib/flow-types";
 
@@ -72,6 +60,21 @@ export function JsonPreview({ nodes, edges }: JsonPreviewProps) {
   );
 
   const [copied, setCopied] = useState(false);
+  const [highlightedHtml, setHighlightedHtml] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    codeToHtml(jsonString, {
+      lang: "json",
+      theme: "one-dark-pro",
+    }).then((html) => {
+      if (!cancelled) setHighlightedHtml(html);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [jsonString]);
+
   const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(jsonString);
@@ -132,28 +135,13 @@ export function JsonPreview({ nodes, edges }: JsonPreviewProps) {
         </div>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto rounded-none border bg-muted/50">
-        <SyntaxHighlighter
-          language="json"
-          customStyle={{
-            margin: 0,
-            padding: "0.75rem 1rem",
-            fontSize: "11px",
-            lineHeight: 1.5,
-            background: "transparent",
+        <div
+          className="json-preview-shiki p-3 px-4 text-[11px] leading-normal font-mono"
+          style={{ fontFamily: "var(--font-geist-mono), monospace" }}
+          dangerouslySetInnerHTML={{
+            __html: highlightedHtml ?? "",
           }}
-          codeTagProps={{
-            style: { fontFamily: "var(--font-geist-mono), monospace" },
-          }}
-          showLineNumbers
-          lineNumberStyle={{
-            minWidth: "2em",
-            paddingRight: "1em",
-            color: "var(--muted-foreground)",
-            fontSize: "10px",
-          }}
-        >
-          {jsonString}
-        </SyntaxHighlighter>
+        />
       </div>
     </div>
   );

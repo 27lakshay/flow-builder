@@ -124,3 +124,25 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Shiki JSON preview: line numbers + transparent background */
+.json-preview-shiki pre {
+  margin: 0;
+  background: transparent !important;
+}
+.json-preview-shiki .shiki {
+  counter-reset: line;
+  background: transparent !important;
+}
+.json-preview-shiki .shiki .line {
+  counter-increment: line;
+}
+.json-preview-shiki .shiki .line::before {
+  content: counter(line);
+  display: inline-block;
+  min-width: 2em;
+  padding-right: 1em;
+  color: var(--muted-foreground);
+  font-size: 10px;
+  user-select: none;
+}
