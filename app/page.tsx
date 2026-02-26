@@ -1,5 +1,5 @@
-import { ComponentExample } from "@/components/component-example";
+import { FlowBuilder } from "@/components/flow-builder";
 
 export default function Page() {
-return <ComponentExample />;
+  return <FlowBuilder />;
 }
